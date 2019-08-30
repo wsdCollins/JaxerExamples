@@ -1,0 +1,312 @@
+<!doctype html>
+<html>
+
+	<head>
+
+		<title>Todo List</title>
+
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, user-scalable=no"/>
+
+		<link rel="stylesheet" type="text/css" href="css/layout.css"/>
+
+		<script runat="server">
+
+			function connectDB() {
+
+				var conn = new Jaxer.DB.SQLite.Connection({
+					PATH : "/tmp/todo.sql"
+				});
+				
+				return conn;
+
+			}
+
+			function createDatabase() {
+
+				var conn = connectDB();
+
+				var sql = [
+					"CREATE TABLE IF NOT EXISTS todo (",
+					"  id INTEGER PRIMARY KEY,",
+					"  item_name varchar(255),",
+					"  item_date date,",
+					"  item_done tinyint default 0,",
+					"  item_fav tinyint default 0",
+					")"
+				];
+
+				
+				conn.open();
+				conn.execute(sql.join(""));
+				conn.close();
+				
+
+			}
+
+			createDatabase();
+
+		</script>
+
+		<script runat="server-proxy">
+
+			function insertItem(item) {
+
+				var conn = connectDB();
+			
+				var sql = [
+					"INSERT INTO todo (",
+					"  item_name, ",
+					"  item_date ",
+					") VALUES ( ?, ? )"
+				];
+
+				conn.open();
+				conn.execute(sql.join(""), [item.input, item.date]);
+				
+				sql = [
+					"SELECT * FROM todo ",
+					"ORDER BY id DESC ",
+					"LIMIT 1"
+				];
+				
+				var result = conn.execute(sql.join(""));
+				conn.close();
+
+				return result.firstRow;
+
+			}
+
+			function selectItems() {
+
+				var conn = connectDB();
+			
+				sql = [
+					"SELECT * FROM todo ",
+					"ORDER BY id ASC"
+				];
+				
+				conn.open();
+				var result = conn.execute(sql.join(""));
+				conn.close();
+
+				return result.rows;
+
+			}
+
+			function updateFavorite(id, num) {
+
+				var conn = connectDB();
+			
+				sql = [
+					"UPDATE todo ",
+					"SET item_fav = ? ",
+					"WHERE id = ?"
+				];
+				
+				conn.open();
+				conn.execute(sql.join(""), [num, id]);
+				conn.close();
+
+				return "okay";
+
+			}
+
+			function updateComplete(id, num) {
+
+				var conn = connectDB();
+			
+				sql = [
+					"UPDATE todo ",
+					"SET item_done = ? ",
+					"WHERE id = ?"
+				];
+				
+				conn.open();
+				conn.execute(sql.join(""), [num, id]);
+				conn.close();
+
+				return "okay";
+
+			}
+
+			function updateContent(id, name, date) {
+
+				var conn = connectDB();
+			
+				sql = [
+					"UPDATE todo ",
+					"SET item_name = ?, ",
+					"item_date = ? ",
+					"WHERE id = ?"
+				];
+				
+				conn.open();
+				conn.execute(sql.join(""), [name, date, id]);
+				conn.close();
+
+				return "okay";
+
+			}
+
+			function removeContent(id) {
+
+				var conn = connectDB();
+			
+				sql = [
+					"DELETE FROM todo ",
+					"WHERE id = ?"
+				];
+				
+				conn.open();
+				conn.execute(sql.join(""), [id]);
+				conn.close();
+
+				return "okay";
+
+			}
+
+			
+
+		</script>
+
+	</head>
+
+	<body>
+
+		<main>
+
+			<header>
+
+				<article>
+					<h1>
+						Task List
+					</h1>
+				</article>
+
+			</header>
+
+			<section>
+				
+				<article>
+
+					<div class="add-form">
+						
+						<table>
+							<tr>
+								<td rowspan="2" class="plus">
+									
+									<div class="plus">+</div>
+
+								</td>
+								<td colspan="2">
+									<input type="text" placeholder="Add Task" id="form.input"/>
+								</td>
+							</tr>
+							<tr>
+								<td class="top">
+									<span>Deadline:</span> <input type="date" id="form.date"/>
+								</td>
+								<td class="top right">
+									<button id="form.submit">Confirm</button>
+								</td>
+							</tr>
+						</table>
+
+					</div>
+
+					<ul id="form.list">
+						
+						<!--
+						<li>
+						
+						<div class="add-form readonly">
+						<table>
+							<tr>
+								<td class="plus">
+									<input type="checkbox" readonly="readonly"/>
+								</td>
+								<td colspan="2">
+									<input type="text" placeholder="Add Task"/>
+								</td>
+							</tr>
+							<tr>
+								<td class="star"><a>★</a></td>
+								<td class="top">
+									<span>Deadline:</span> <input type="date" readonly="readonly"/>
+								</td>
+								<td class="top right">
+									<button>Edit</button>
+								</td>
+							</tr>
+						</table>
+						</div>
+						
+						</li>
+
+						<li>
+						
+						<div class="add-form readonly favorite">
+						<table>
+							<tr>
+								<td class="plus">
+									<input type="checkbox"/>
+								</td>
+								<td colspan="2">
+									<input type="text" placeholder="Add Task" readonly="readonly"/>
+								</td>
+							</tr>
+							<tr>
+								<td class="star"><a>★</a></td>
+								<td class="top">
+									<span>Deadline:</span> <input type="date" readonly="readonly"/>
+								</td>
+								<td class="top right">
+									<button>Edit</button>
+								</td>
+							</tr>
+						</table>
+						</div>
+						
+						</li>
+
+						<li>
+						
+						<div class="add-form readonly checked">
+						<table>
+							<tr>
+								<td class="plus">
+									<input type="checkbox" checked/>
+								</td>
+								<td colspan="2">
+									<input type="text" placeholder="Add Task"/>
+								</td>
+							</tr>
+							<tr>
+								<td class="star"><a>★</a></td>
+								<td class="top">
+									<span>Deadline:</span> <input type="date" readonly="readonly"/>
+								</td>
+								<td class="top right">
+									<button>Edit</button>
+								</td>
+							</tr>
+						</table>
+						</div
+						
+						</li>
+						-->
+
+					</ul>
+
+				</article>
+
+			</section>
+
+		</main>
+
+		<script type="text/javascript" src="js/client.js"></script>
+
+	</body>
+
+</html>
