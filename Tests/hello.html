@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+
+	<head>
+
+		<title>Hello Worlds</title>
+		<meta charset="utf-8"/>
+
+		<script runat="server-proxy">
+
+			function hello(name) {
+				return "hello world!!";
+			}
+
+		</script>
+
+
+	</head>
+
+	<body>
+
+		<button id="btn">Say Hello</button>
+
+		<script>
+
+			let btn = document.getElementById("btn");
+			btn.addEventListener("click", sayhello);
+
+			async function sayhello() {
+
+				let message = await Jaxer.async.hello();
+				console.log(message);
+
+			}
+
+		</script>
+
+	</body>
+
+</html>
